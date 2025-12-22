@@ -1,0 +1,1394 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Черричка: Архитектура революции</title>
+  <style>
+    :root{
+      --bg0:#0b1220;
+      --bg1:#0f1d34;
+      --panel:#101a2b;
+      --panel2:#0c1526;
+      --text:#eaf0ff;
+      --muted:#9fb2d9;
+      --accent:#ff4d8d;
+      --accent2:#7cff6b;
+      --warn:#ffcc66;
+      --bad:#ff5a5a;
+      --tile:#182a47;
+    }
+
+    html,body{height:100%;}
+    body{
+      margin:0;
+      background: radial-gradient(1200px 800px at 20% 10%, #162a4d 0%, var(--bg0) 55%, #070b14 100%);
+      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      overflow:hidden;
+    }
+
+    .wrap{
+      height:100%;
+      display:grid;
+      grid-template-columns: 360px 1fr;
+      gap:16px;
+      padding:16px;
+      box-sizing:border-box;
+    }
+
+    .panel{
+      background: linear-gradient(180deg, rgba(16,26,43,0.92) 0%, rgba(12,21,38,0.88) 100%);
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:16px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+      overflow:hidden;
+    }
+
+    .left{
+      display:flex;
+      flex-direction:column;
+      min-width: 320px;
+    }
+
+    .hdr{
+      padding:16px 16px 10px;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+    }
+
+    .title{
+      font-weight:800;
+      letter-spacing:0.2px;
+      font-size:18px;
+      line-height:1.2;
+      margin:0;
+    }
+
+    .subtitle{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.35;
+    }
+
+    .body{
+      padding:14px 16px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      flex:1;
+      overflow:auto;
+    }
+
+    .card{
+      background: rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.06);
+      border-radius:12px;
+      padding:12px;
+    }
+
+    .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .k{
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .v{
+      font-weight:700;
+      font-size:12px;
+    }
+
+    .btnrow{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    button{
+      appearance:none;
+      border:1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.05);
+      color:var(--text);
+      border-radius:12px;
+      padding:10px 10px;
+      font-weight:700;
+      cursor:pointer;
+      transition: transform .05s ease, background .15s ease, border-color .15s ease;
+    }
+
+    button:hover{ background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.16); }
+    button:active{ transform: translateY(1px); }
+    button.primary{ border-color: rgba(255,77,141,0.35); background: rgba(255,77,141,0.12); }
+    button.primary:hover{ background: rgba(255,77,141,0.18); }
+
+    .toolgrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:8px;
+    }
+
+    .tool{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      padding:10px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .tool.sel{
+      border-color: rgba(124,255,107,0.28);
+      box-shadow: 0 0 0 2px rgba(124,255,107,0.10) inset;
+      background: rgba(124,255,107,0.06);
+    }
+
+    .badge{
+      min-width:26px;
+      height:26px;
+      border-radius:8px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:900;
+      background: rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.08);
+      color: var(--text);
+      font-size:12px;
+      flex:0 0 auto;
+    }
+
+    .tool h4{ margin:0; font-size:13px; }
+    .tool p{ margin:4px 0 0; font-size:12px; color: var(--muted); line-height:1.35; }
+
+    .hint{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.45;
+    }
+
+    .game{
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    canvas{
+      width:100%;
+      height:100%;
+      border-radius:16px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+      border:1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 18px 60px rgba(0,0,0,0.35);
+    }
+
+    .overlay{
+      position:absolute;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      box-sizing:border-box;
+    }
+
+    .overlay.show{ display:flex; }
+
+    .modal{
+      width:min(720px, 100%);
+      background: rgba(10,16,28,0.85);
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:18px;
+      padding:16px;
+      box-shadow: 0 20px 80px rgba(0,0,0,0.45);
+      backdrop-filter: blur(8px);
+    }
+
+    .modal h2{ margin:0; font-size:18px; }
+    .modal p{ margin:10px 0 0; color:var(--muted); line-height:1.45; }
+    .modal .actions{ margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; }
+
+    .kbd{
+      display:inline-flex;
+      padding:1px 7px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      font-weight:800;
+      font-size:12px;
+      color: var(--text);
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="panel left">
+      <div class="hdr">
+        <h1 class="title">Черричка: Архитектура революции</h1>
+        <p class="subtitle">Тактический мини‑прототип: не деритесь с Лимонишками — перепроектируйте мир.</p>
+      </div>
+
+      <div class="body">
+        <div class="card">
+          <div class="row"><div class="k">Уровень</div><div class="v" id="uiLevel">1</div></div>
+          <div class="row"><div class="k">Цель</div><div class="v" id="uiGoal">Проведи Чиполлино к выходу</div></div>
+          <div class="row"><div class="k">Гнилой Устав</div><div class="v" id="uiCharter">Включён</div></div>
+          <div class="row"><div class="k">Устав: распад</div><div class="v"><span id="uiDecay">8.0</span>с</div></div>
+        </div>
+
+        <div class="card">
+          <div class="row"><div class="k">Инструмент</div><div class="v" id="uiTool">1 — Взрастить</div></div>
+          <div class="toolgrid" role="list">
+            <div class="tool sel" id="tool1" role="listitem">
+              <div class="badge">1</div>
+              <div>
+                <h4>Взрастить платформу</h4>
+                <p>ЛКМ по пустой клетке рядом с героем — вырастить подсолнух‑платформу (временно).</p>
+              </div>
+            </div>
+            <div class="tool" id="tool2" role="listitem">
+              <div class="badge">2</div>
+              <div>
+                <h4>Подрезать</h4>
+                <p>ЛКМ по вашей платформе — срезать её. Полезно, чтобы сбросить гвардейца в яму.</p>
+              </div>
+            </div>
+            <div class="tool" id="tool3" role="listitem">
+              <div class="badge">3</div>
+              <div>
+                <h4>Клапан полива</h4>
+                <p>ЛКМ по клапану — переключить направление воды и смыть Лимонишек на линии потока.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="btnrow">
+            <button class="primary" id="btnRestart">R — Перезапуск</button>
+            <button id="btnNext">N — Следующий</button>
+          </div>
+          <div class="hint" style="margin-top:10px;">
+            Управление:
+            <div style="margin-top:8px;">
+              <span class="kbd">1</span> <span class="kbd">2</span> <span class="kbd">3</span> — инструменты
+              <br />
+              <span class="kbd">ЛКМ</span> — применить
+              <br />
+              <span class="kbd">R</span> — перезапуск, <span class="kbd">N</span> — следующий
+              <br />
+              <span class="kbd">Space</span> — пауза
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="row"><div class="k">Статус</div><div class="v" id="uiStatus">Готово</div></div>
+          <div class="hint" id="uiHint" style="margin-top:8px;">Подсказка: вы не управляете Чиполлино напрямую — он идёт к выходу сам. Вы меняете архитектуру.</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="game">
+      <canvas id="c" width="1280" height="720"></canvas>
+      <div class="overlay" id="overlay">
+        <div class="modal">
+          <h2 id="ovTitle">Заголовок</h2>
+          <p id="ovText">Текст</p>
+          <div class="actions">
+            <button class="primary" id="ovPrimary">Продолжить</button>
+            <button id="ovSecondary">Перезапуск</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+
+  let viewW = canvas.width;
+  let viewH = canvas.height;
+
+  const ui = {
+    level: document.getElementById('uiLevel'),
+    tool: document.getElementById('uiTool'),
+    goal: document.getElementById('uiGoal'),
+    charter: document.getElementById('uiCharter'),
+    decay: document.getElementById('uiDecay'),
+    status: document.getElementById('uiStatus'),
+    hint: document.getElementById('uiHint'),
+    tool1: document.getElementById('tool1'),
+    tool2: document.getElementById('tool2'),
+    tool3: document.getElementById('tool3'),
+    btnRestart: document.getElementById('btnRestart'),
+    btnNext: document.getElementById('btnNext'),
+    overlay: document.getElementById('overlay'),
+    ovTitle: document.getElementById('ovTitle'),
+    ovText: document.getElementById('ovText'),
+    ovPrimary: document.getElementById('ovPrimary'),
+    ovSecondary: document.getElementById('ovSecondary'),
+  };
+
+  const TILE = 32;
+  const GRID_W = 40;
+  const GRID_H = 22;
+  const WORLD_W = GRID_W * TILE;
+  const WORLD_H = GRID_H * TILE;
+
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  const colors = {
+    bgA: '#0b1220',
+    bgB: '#0f1d34',
+    ground1: '#1b3b6a',
+    ground2: '#163156',
+    rock: '#0f2442',
+    plant: '#63ff76',
+    plant2: '#20d95f',
+    mold: '#7d66ff',
+    hero: '#ffd1e2',
+    hero2: '#ff4d8d',
+    lemon: '#ffe66d',
+    lemon2: '#ffc72e',
+    exit: '#7cff6b',
+    valve: '#86c7ff',
+    water: '#63a8ff',
+    uiShadow: 'rgba(0,0,0,0.45)'
+  };
+
+  const Tool = {
+    GROW: 1,
+    CUT: 2,
+    VALVE: 3,
+  };
+
+  const GameMode = {
+    RUNNING: 'running',
+    PAUSED: 'paused',
+    WON: 'won',
+    LOST: 'lost',
+    INTRO: 'intro',
+  };
+
+  let tool = Tool.GROW;
+  let mode = GameMode.INTRO;
+
+  const pointer = {
+    x: 0,
+    y: 0,
+    down: false,
+    justClicked: false,
+  };
+
+  function makeGrid(fill = 0) {
+    const a = new Array(GRID_W * GRID_H);
+    a.fill(fill);
+    return a;
+  }
+
+  function idx(x, y) {
+    return y * GRID_W + x;
+  }
+
+  function inBounds(x, y) {
+    return x >= 0 && y >= 0 && x < GRID_W && y < GRID_H;
+  }
+
+  function tileAt(grid, x, y) {
+    if (!inBounds(x, y)) return 1;
+    return grid[idx(x, y)];
+  }
+
+  function setTile(grid, x, y, v) {
+    if (!inBounds(x, y)) return;
+    grid[idx(x, y)] = v;
+  }
+
+  function rectsOverlap(a, b) {
+    return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  }
+
+  function worldToTile(wx, wy) {
+    return { tx: Math.floor(wx / TILE), ty: Math.floor(wy / TILE) };
+  }
+
+  function tileToWorld(tx, ty) {
+    return { x: tx * TILE, y: ty * TILE };
+  }
+
+  const TileType = {
+    EMPTY: 0,
+    SOLID: 1,
+    EXIT: 2,
+    VALVE: 3,
+    SPIKE: 4,
+  };
+
+  function parseLevel(lines) {
+    const base = makeGrid(TileType.EMPTY);
+    const growBlocked = makeGrid(0);
+
+    let hero = { x: 0, y: 0 };
+    const enemies = [];
+    const valves = [];
+    let exit = { x: 0, y: 0 };
+
+    for (let y = 0; y < GRID_H; y++) {
+      const row = (lines[y] || '').padEnd(GRID_W, '.');
+      for (let x = 0; x < GRID_W; x++) {
+        const ch = row[x];
+        if (ch === '#') setTile(base, x, y, TileType.SOLID);
+        else if (ch === 'S') {
+          hero = { x, y };
+          setTile(base, x, y, TileType.EMPTY);
+        } else if (ch === 'E') {
+          exit = { x, y };
+          setTile(base, x, y, TileType.EXIT);
+        } else if (ch === 'L') {
+          enemies.push({ x, y, dir: 1, t: 0, cutCd: 0, alive: true });
+          setTile(base, x, y, TileType.EMPTY);
+        } else if (ch === 'V') {
+          valves.push({ x, y, state: 0, pulse: 0 });
+          setTile(base, x, y, TileType.VALVE);
+        } else if (ch === '^') {
+          setTile(base, x, y, TileType.SPIKE);
+        } else {
+          setTile(base, x, y, TileType.EMPTY);
+        }
+      }
+    }
+
+    for (let y = 0; y < GRID_H; y++) {
+      for (let x = 0; x < GRID_W; x++) {
+        const t = tileAt(base, x, y);
+        if (t === TileType.SOLID || t === TileType.EXIT || t === TileType.VALVE || t === TileType.SPIKE) {
+          setTile(growBlocked, x, y, 1);
+        }
+      }
+    }
+
+    return { base, growBlocked, hero, enemies, valves, exit };
+  }
+
+  const levels = [
+    {
+      name: 'Деревня: Лопухи и шелуха',
+      goal: 'Проведи Чиполлино к выходу. Пробуй выращивать мосты.',
+      decaySeconds: 8.0,
+      charterOn: true,
+      lines: [
+        '........................................',
+        '........................................',
+        '........................................',
+        '....................L...................',
+        '.................#######................',
+        '........................................',
+        '.............V..........................',
+        '.............#..........................',
+        '.............#..............#####.......',
+        '.............#..................#.......',
+        '.............#..............^...#....E..',
+        '.............#..............#...#.......',
+        '.............#..............#...#.......',
+        '.............#..............#...#.......',
+        '.............#..............#...#.......',
+        '.............#..............#...#.......',
+        '.............#..............#...#.......',
+        'S............#..............#...#.......',
+        '##############..............#####.......',
+        '##############..........................',
+        '##############..........................',
+        '########################################',
+      ]
+    },
+    {
+      name: 'Рынок: Каналы полива',
+      goal: 'Смой Лимонишек водой с клапана (инструмент 3).',
+      decaySeconds: 7.0,
+      charterOn: true,
+      lines: [
+        '........................................',
+        '........................................',
+        '...............L........................',
+        '.............#####......................',
+        '..............................#####.....',
+        '.................^..................#....',
+        '..............V..#..................#..E.',
+        '..............#..#..................#....',
+        '..............#..#..................#....',
+        '..............#..#.............#######...',
+        '..............#..#.......................',
+        '..............#..#.......................',
+        '..............#..#.......................',
+        '..............#..#.......................',
+        '..............#..#.......................',
+        '..............#..#.......................',
+        '..............#..#.......................',
+        'S.............#..#.......................',
+        '###############..########################',
+        '###############..########################',
+        '###############..########################',
+        '########################################',
+      ]
+    },
+    {
+      name: 'Тюрьма: Осадная лоза',
+      goal: 'Построй временную башню из платформ и обойди патруль.',
+      decaySeconds: 6.5,
+      charterOn: true,
+      lines: [
+        '........................................',
+        '........................................',
+        '.........................L..............',
+        '......................########..........',
+        '......................#......#..........',
+        '......................#..^...#..........',
+        '......................#......#.....E....',
+        '......................#......#..........',
+        '......................#......#..........',
+        '......................#......#..........',
+        '......................#......#..........',
+        '...........V..........########..........',
+        '...........#............................',
+        '...........#............................',
+        '...........#...................#####....',
+        '...........#.......................#....',
+        '...........#.......................#....',
+        'S..........#.......................#....',
+        '############.......................#....',
+        '############.......................#....',
+        '############.......................#....',
+        '########################################',
+      ]
+    }
+  ];
+
+  const state = {
+    levelIndex: 0,
+    base: null,
+    growBlocked: null,
+    placed: new Map(),
+    hero: {
+      x: 0, y: 0,
+      vx: 0, vy: 0,
+      w: 22, h: 26,
+      onGround: false,
+      alive: true,
+      face: 1,
+      stuckT: 0,
+    },
+    exit: { x: 0, y: 0 },
+    enemies: [],
+    valves: [],
+    waterBeams: [],
+    camX: 0,
+    camY: 0,
+    t: 0,
+    msg: '',
+    paused: false,
+    lastHeroX: 0,
+  };
+
+  function placedKey(tx, ty) {
+    return `${tx},${ty}`;
+  }
+
+  function isSolidAt(tx, ty) {
+    const b = tileAt(state.base, tx, ty);
+    if (b === TileType.SOLID) return true;
+    const pk = placedKey(tx, ty);
+    const p = state.placed.get(pk);
+    if (p && p.kind === 'plant') return true;
+    return false;
+  }
+
+  function isSpikeAt(tx, ty) {
+    return tileAt(state.base, tx, ty) === TileType.SPIKE;
+  }
+
+  function isExitAt(tx, ty) {
+    return tileAt(state.base, tx, ty) === TileType.EXIT;
+  }
+
+  function isValveAt(tx, ty) {
+    return tileAt(state.base, tx, ty) === TileType.VALVE;
+  }
+
+  function resetLevel(i) {
+    const L = levels[i];
+    state.levelIndex = i;
+
+    const parsed = parseLevel(L.lines);
+    state.base = parsed.base;
+    state.growBlocked = parsed.growBlocked;
+    state.exit = parsed.exit;
+
+    state.placed.clear();
+    state.enemies = parsed.enemies;
+    state.valves = parsed.valves;
+    state.waterBeams = [];
+
+    const hx = parsed.hero.x * TILE + (TILE - state.hero.w) / 2;
+    const hy = parsed.hero.y * TILE + (TILE - state.hero.h) / 2;
+    state.hero.x = hx;
+    state.hero.y = hy;
+    state.hero.vx = 0;
+    state.hero.vy = 0;
+    state.hero.onGround = false;
+    state.hero.alive = true;
+    state.hero.face = 1;
+    state.hero.stuckT = 0;
+
+    state.t = 0;
+    state.msg = '';
+    state.paused = false;
+    state.lastHeroX = state.hero.x;
+
+    ui.level.textContent = String(i + 1) + ' / ' + String(levels.length);
+    ui.goal.textContent = L.goal;
+    ui.charter.textContent = L.charterOn ? 'Включён' : 'Выключен';
+    ui.decay.textContent = L.decaySeconds.toFixed(1);
+    ui.status.textContent = 'Идёт стройка';
+    ui.hint.textContent = L.name;
+
+    mode = GameMode.RUNNING;
+    hideOverlay();
+  }
+
+  function showOverlay(title, text, primaryText) {
+    ui.ovTitle.textContent = title;
+    ui.ovText.textContent = text;
+    ui.ovPrimary.textContent = primaryText || 'Продолжить';
+    ui.overlay.classList.add('show');
+  }
+
+  function hideOverlay() {
+    ui.overlay.classList.remove('show');
+  }
+
+  function setTool(t) {
+    tool = t;
+    ui.tool1.classList.toggle('sel', t === Tool.GROW);
+    ui.tool2.classList.toggle('sel', t === Tool.CUT);
+    ui.tool3.classList.toggle('sel', t === Tool.VALVE);
+
+    if (t === Tool.GROW) ui.tool.textContent = '1 — Взрастить';
+    if (t === Tool.CUT) ui.tool.textContent = '2 — Подрезать';
+    if (t === Tool.VALVE) ui.tool.textContent = '3 — Клапан';
+  }
+
+  function tileDistanceToHero(tx, ty) {
+    const cx = state.hero.x + state.hero.w / 2;
+    const cy = state.hero.y + state.hero.h / 2;
+    const wx = tx * TILE + TILE / 2;
+    const wy = ty * TILE + TILE / 2;
+    const dx = wx - cx;
+    const dy = wy - cy;
+    return Math.hypot(dx, dy) / TILE;
+  }
+
+  function applyToolAt(tx, ty) {
+    if (!inBounds(tx, ty)) return;
+    const L = levels[state.levelIndex];
+
+    if (tool === Tool.GROW) {
+      if (tileAt(state.growBlocked, tx, ty) === 1) {
+        state.msg = 'Нельзя взрастить: занято.';
+        return;
+      }
+      const dist = tileDistanceToHero(tx, ty);
+      if (dist > 6.0) {
+        state.msg = 'Далеко: Черричка не дотягивается.';
+        return;
+      }
+      const key = placedKey(tx, ty);
+      if (state.placed.has(key)) {
+        state.msg = 'Там уже есть творение.';
+        return;
+      }
+      state.placed.set(key, {
+        kind: 'plant',
+        ttl: L.charterOn ? L.decaySeconds : 9999,
+        bornT: state.t,
+      });
+      state.msg = 'Взращено.';
+      return;
+    }
+
+    if (tool === Tool.CUT) {
+      const dist = tileDistanceToHero(tx, ty);
+      if (dist > 7.0) {
+        state.msg = 'Далеко: не получается подрезать.';
+        return;
+      }
+      const key = placedKey(tx, ty);
+      const p = state.placed.get(key);
+      if (p && p.kind === 'plant') {
+        state.placed.delete(key);
+        state.msg = 'Срезано.';
+      } else {
+        state.msg = 'Нечего подрезать.';
+      }
+      return;
+    }
+
+    if (tool === Tool.VALVE) {
+      const v = state.valves.find(q => q.x === tx && q.y === ty);
+      if (!v) {
+        state.msg = 'Это не клапан.';
+        return;
+      }
+      v.state = (v.state + 1) % 2;
+      v.pulse = 0.22;
+      spawnWaterFromValve(v);
+      state.msg = v.state === 0 ? 'Вода: горизонтально.' : 'Вода: вертикально.';
+      return;
+    }
+  }
+
+  function spawnWaterFromValve(v) {
+    const beams = [];
+
+    const dirs = v.state === 0
+      ? [{dx:1,dy:0},{dx:-1,dy:0}]
+      : [{dx:0,dy:1},{dx:0,dy:-1}];
+
+    for (const d of dirs) {
+      let x = v.x + d.dx;
+      let y = v.y + d.dy;
+      let len = 0;
+      while (inBounds(x, y) && !isSolidAt(x, y) && tileAt(state.base, x, y) !== TileType.SOLID) {
+        beams.push({ x, y, ttl: 0.35, dx: d.dx, dy: d.dy });
+        len++;
+        x += d.dx;
+        y += d.dy;
+        if (len > 48) break;
+      }
+    }
+
+    state.waterBeams.push(...beams);
+
+    for (const e of state.enemies) {
+      if (!e.alive) continue;
+      const ex = e.x;
+      const ey = e.y;
+      for (const b of beams) {
+        if (b.x === ex && b.y === ey) {
+          e.alive = false;
+          break;
+        }
+      }
+    }
+  }
+
+  function solveAABBCollisions(entity, dt) {
+    entity.onGround = false;
+
+    const maxStep = 12;
+    let steps = Math.ceil(Math.max(Math.abs(entity.vx * dt), Math.abs(entity.vy * dt)) / maxStep);
+    steps = clamp(steps, 1, 10);
+    const sdt = dt / steps;
+
+    for (let i = 0; i < steps; i++) {
+      entity.x += entity.vx * sdt;
+      collideX(entity);
+      entity.y += entity.vy * sdt;
+      collideY(entity);
+    }
+  }
+
+  function collideX(e) {
+    const left = Math.floor(e.x / TILE);
+    const right = Math.floor((e.x + e.w - 1) / TILE);
+    const top = Math.floor(e.y / TILE);
+    const bottom = Math.floor((e.y + e.h - 1) / TILE);
+
+    if (e.vx > 0) {
+      for (let ty = top; ty <= bottom; ty++) {
+        if (isSolidAt(right, ty)) {
+          e.x = right * TILE - e.w;
+          e.vx = 0;
+          return;
+        }
+      }
+    }
+
+    if (e.vx < 0) {
+      for (let ty = top; ty <= bottom; ty++) {
+        if (isSolidAt(left, ty)) {
+          e.x = (left + 1) * TILE;
+          e.vx = 0;
+          return;
+        }
+      }
+    }
+  }
+
+  function collideY(e) {
+    const left = Math.floor(e.x / TILE);
+    const right = Math.floor((e.x + e.w - 1) / TILE);
+    const top = Math.floor(e.y / TILE);
+    const bottom = Math.floor((e.y + e.h - 1) / TILE);
+
+    if (e.vy > 0) {
+      for (let tx = left; tx <= right; tx++) {
+        if (isSolidAt(tx, bottom)) {
+          e.y = bottom * TILE - e.h;
+          e.vy = 0;
+          e.onGround = true;
+          return;
+        }
+      }
+    }
+
+    if (e.vy < 0) {
+      for (let tx = left; tx <= right; tx++) {
+        if (isSolidAt(tx, top)) {
+          e.y = (top + 1) * TILE;
+          e.vy = 0;
+          return;
+        }
+      }
+    }
+  }
+
+  function heroAI(dt) {
+    const h = state.hero;
+    const ex = state.exit.x * TILE + TILE/2;
+    const hx = h.x + h.w/2;
+
+    const desired = ex > hx ? 1 : -1;
+    h.face = desired;
+
+    const speed = 120;
+    h.vx = lerp(h.vx, desired * speed, 0.18);
+
+    const frontX = desired > 0 ? (h.x + h.w + 2) : (h.x - 2);
+    const footY = h.y + h.h - 2;
+
+    const fTile = worldToTile(frontX, footY);
+    const headTile = worldToTile(frontX, h.y + 4);
+
+    const frontSolid = isSolidAt(fTile.tx, fTile.ty);
+    const headSolid = isSolidAt(headTile.tx, headTile.ty);
+
+    const belowFront = worldToTile(frontX, h.y + h.h + 2);
+    const hasFloorAhead = isSolidAt(belowFront.tx, belowFront.ty);
+
+    if (h.onGround) {
+      if ((frontSolid || headSolid) || !hasFloorAhead) {
+        h.vy = -300;
+        h.onGround = false;
+      }
+    }
+
+    if (Math.abs(h.x - state.lastHeroX) < 1.0) {
+      h.stuckT += dt;
+    } else {
+      h.stuckT = Math.max(0, h.stuckT - dt * 1.5);
+    }
+    state.lastHeroX = h.x;
+
+    if (h.stuckT > 2.0) {
+      state.msg = 'Чиполлино застрял — измени геометрию (вырасти мост/ступени).';
+    }
+  }
+
+  function enemyUpdate(e, dt) {
+    if (!e.alive) return;
+
+    e.t += dt;
+    e.cutCd = Math.max(0, e.cutCd - dt);
+
+    const w = 22;
+    const h = 22;
+
+    let vx = 70 * e.dir;
+    let vy = 0;
+
+    vy += 900 * dt;
+
+    let x = e.x * TILE + (TILE - w)/2;
+    let y = e.y * TILE + (TILE - h)/2;
+
+    const ent = { x, y, w, h, vx, vy, onGround: false };
+    solveAABBCollisions(ent, dt);
+
+    const mid = worldToTile(ent.x + ent.w/2, ent.y + ent.h/2);
+    e.x = mid.tx;
+    e.y = mid.ty;
+
+    const front = e.dir > 0 ? worldToTile(ent.x + ent.w + 2, ent.y + ent.h - 2) : worldToTile(ent.x - 2, ent.y + ent.h - 2);
+    const below = e.dir > 0 ? worldToTile(ent.x + ent.w + 2, ent.y + ent.h + 2) : worldToTile(ent.x - 2, ent.y + ent.h + 2);
+
+    const frontSolid = isSolidAt(front.tx, front.ty);
+    const hasFloor = isSolidAt(below.tx, below.ty);
+
+    if (frontSolid || !hasFloor) {
+      e.dir *= -1;
+    }
+
+    if (e.cutCd <= 0) {
+      const candidates = [
+        { tx: mid.tx + 1, ty: mid.ty },
+        { tx: mid.tx - 1, ty: mid.ty },
+        { tx: mid.tx, ty: mid.ty - 1 },
+        { tx: mid.tx, ty: mid.ty + 1 },
+      ];
+      for (const c of candidates) {
+        const key = placedKey(c.tx, c.ty);
+        const p = state.placed.get(key);
+        if (p && p.kind === 'plant') {
+          state.placed.delete(key);
+          e.cutCd = 1.4;
+          break;
+        }
+      }
+    }
+  }
+
+  function update(dt) {
+    if (mode !== GameMode.RUNNING) return;
+    if (state.paused) return;
+
+    state.t += dt;
+
+    const L = levels[state.levelIndex];
+
+    for (const [key, p] of state.placed.entries()) {
+      if (L.charterOn) {
+        p.ttl -= dt;
+        if (p.ttl <= 0) {
+          state.placed.delete(key);
+        }
+      }
+    }
+
+    for (const v of state.valves) {
+      v.pulse = Math.max(0, v.pulse - dt);
+    }
+
+    state.waterBeams = state.waterBeams.filter(b => (b.ttl -= dt) > 0);
+
+    const h = state.hero;
+    heroAI(dt);
+
+    h.vy += 900 * dt;
+    solveAABBCollisions(h, dt);
+
+    const htx = Math.floor((h.x + h.w/2) / TILE);
+    const hty = Math.floor((h.y + h.h/2) / TILE);
+
+    if (isSpikeAt(htx, Math.floor((h.y + h.h - 2)/TILE))) {
+      lose('Шипы', 'Гнилой Устав любит острые меры. В этот раз дорожка оказалась смертельной.');
+      return;
+    }
+
+    for (const e of state.enemies) {
+      enemyUpdate(e, dt);
+      if (!e.alive) continue;
+
+      const er = {
+        x: e.x * TILE + 5,
+        y: e.y * TILE + 6,
+        w: 22,
+        h: 22,
+      };
+
+      const hr = { x: h.x, y: h.y, w: h.w, h: h.h };
+      if (rectsOverlap(er, hr)) {
+        lose('Лимонишка настиг', 'Гвардеец‑лимон ударил саблей по вашему плану. Нужен обход или вода.');
+        return;
+      }
+    }
+
+    if (h.y > WORLD_H + 200) {
+      lose('Падение', 'Чиполлино сорвался вниз. Вырасти мосты и ступени, чтобы удержать путь.');
+      return;
+    }
+
+    if (isExitAt(htx, hty)) {
+      win();
+      return;
+    }
+
+    const camTargetX = clamp(h.x + h.w/2 - viewW/2, 0, WORLD_W - viewW);
+    const camTargetY = clamp(h.y + h.h/2 - viewH/2, 0, WORLD_H - viewH);
+    state.camX = lerp(state.camX, camTargetX, 0.08);
+    state.camY = lerp(state.camY, camTargetY, 0.08);
+
+    if (state.msg) {
+      ui.status.textContent = state.msg;
+      state.msg = '';
+    }
+
+    if (pointer.justClicked) {
+      const wx = state.camX + pointer.x;
+      const wy = state.camY + pointer.y;
+      const t = worldToTile(wx, wy);
+      applyToolAt(t.tx, t.ty);
+    }
+
+    pointer.justClicked = false;
+  }
+
+  function win() {
+    mode = GameMode.WON;
+    ui.status.textContent = 'Победа';
+    showOverlay(
+      'Победа: архитектура победила силу',
+      'Чиполлино добрался до цели. Вы не били гвардейцев — вы переписали геометрию мира. Нажмите «Продолжить», чтобы идти дальше.',
+      state.levelIndex < levels.length - 1 ? 'Следующий уровень' : 'Снова сначала'
+    );
+  }
+
+  function lose(title, text) {
+    mode = GameMode.LOST;
+    ui.status.textContent = 'Поражение';
+    showOverlay('Поражение: ' + title, text, 'Попробовать снова');
+  }
+
+  function draw() {
+    ctx.clearRect(0,0,viewW,viewH);
+
+    const g = ctx.createLinearGradient(0,0,0,viewH);
+    g.addColorStop(0, colors.bgB);
+    g.addColorStop(1, colors.bgA);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,viewW,viewH);
+
+    ctx.save();
+    ctx.translate(-state.camX, -state.camY);
+
+    const startX = Math.floor(state.camX / TILE) - 2;
+    const endX = Math.floor((state.camX + viewW) / TILE) + 2;
+    const startY = Math.floor(state.camY / TILE) - 2;
+    const endY = Math.floor((state.camY + viewH) / TILE) + 2;
+
+    for (let y = startY; y <= endY; y++) {
+      for (let x = startX; x <= endX; x++) {
+        if (!inBounds(x,y)) continue;
+        const t = tileAt(state.base, x, y);
+        const wx = x * TILE;
+        const wy = y * TILE;
+
+        if (t === TileType.SOLID) {
+          ctx.fillStyle = (x + y) % 2 === 0 ? colors.ground1 : colors.ground2;
+          ctx.fillRect(wx, wy, TILE, TILE);
+          ctx.fillStyle = 'rgba(0,0,0,0.18)';
+          ctx.fillRect(wx, wy + TILE - 6, TILE, 6);
+        } else if (t === TileType.EXIT) {
+          ctx.fillStyle = 'rgba(124,255,107,0.18)';
+          ctx.fillRect(wx, wy, TILE, TILE);
+          ctx.strokeStyle = colors.exit;
+          ctx.lineWidth = 2;
+          ctx.strokeRect(wx + 4, wy + 4, TILE - 8, TILE - 8);
+          ctx.fillStyle = colors.exit;
+          ctx.fillRect(wx + 10, wy + 9, TILE - 20, TILE - 18);
+        } else if (t === TileType.VALVE) {
+          ctx.fillStyle = 'rgba(134,199,255,0.10)';
+          ctx.fillRect(wx, wy, TILE, TILE);
+          ctx.strokeStyle = colors.valve;
+          ctx.lineWidth = 2;
+          ctx.strokeRect(wx + 5, wy + 5, TILE - 10, TILE - 10);
+          const v = state.valves.find(q => q.x === x && q.y === y);
+          const pulse = v ? v.pulse : 0;
+          ctx.strokeStyle = `rgba(134,199,255,${0.55 + 0.45*pulse})`;
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          if (v && v.state === 1) {
+            ctx.moveTo(wx + TILE/2, wy + 8);
+            ctx.lineTo(wx + TILE/2, wy + TILE - 8);
+          } else {
+            ctx.moveTo(wx + 8, wy + TILE/2);
+            ctx.lineTo(wx + TILE - 8, wy + TILE/2);
+          }
+          ctx.stroke();
+        } else if (t === TileType.SPIKE) {
+          ctx.fillStyle = 'rgba(255,90,90,0.10)';
+          ctx.fillRect(wx, wy, TILE, TILE);
+          ctx.fillStyle = colors.bad;
+          ctx.beginPath();
+          ctx.moveTo(wx + 4, wy + TILE - 4);
+          ctx.lineTo(wx + TILE/2, wy + 6);
+          ctx.lineTo(wx + TILE - 4, wy + TILE - 4);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        const p = state.placed.get(placedKey(x,y));
+        if (p && p.kind === 'plant') {
+          const L = levels[state.levelIndex];
+          let alpha = 1;
+          if (L.charterOn) {
+            alpha = clamp(p.ttl / L.decaySeconds, 0, 1);
+          }
+          const mold = 1 - alpha;
+
+          ctx.fillStyle = `rgba(32,217,95,${0.22 + 0.32*alpha})`;
+          ctx.fillRect(wx, wy, TILE, TILE);
+
+          ctx.fillStyle = `rgba(99,255,118,${0.55*alpha})`;
+          ctx.beginPath();
+          ctx.ellipse(wx + TILE/2, wy + TILE/2, 11, 11, 0, 0, Math.PI*2);
+          ctx.fill();
+
+          ctx.strokeStyle = `rgba(125,102,255,${0.55*mold})`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(wx + TILE/2, wy + TILE/2, 10, 0, Math.PI*2);
+          ctx.stroke();
+        }
+      }
+    }
+
+    for (const b of state.waterBeams) {
+      const wx = b.x * TILE;
+      const wy = b.y * TILE;
+      ctx.fillStyle = 'rgba(99,168,255,0.18)';
+      ctx.fillRect(wx, wy, TILE, TILE);
+      ctx.strokeStyle = 'rgba(99,168,255,0.72)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(wx + 8, wy + 8);
+      ctx.lineTo(wx + TILE - 8, wy + TILE - 8);
+      ctx.stroke();
+    }
+
+    for (const e of state.enemies) {
+      if (!e.alive) continue;
+      const x = e.x * TILE + 5;
+      const y = e.y * TILE + 6;
+      ctx.fillStyle = 'rgba(0,0,0,0.22)';
+      ctx.beginPath();
+      ctx.ellipse(x + 11, y + 20, 12, 6, 0, 0, Math.PI*2);
+      ctx.fill();
+
+      ctx.fillStyle = colors.lemon;
+      ctx.beginPath();
+      ctx.ellipse(x + 11, y + 11, 11, 10, 0, 0, Math.PI*2);
+      ctx.fill();
+
+      ctx.strokeStyle = colors.lemon2;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x + 11, y + 11, 10, 0, Math.PI*2);
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.fillRect(x + (e.dir > 0 ? 14 : 7), y + 8, 2, 2);
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      if (e.dir > 0) {
+        ctx.moveTo(x + 20, y + 16);
+        ctx.lineTo(x + 28, y + 12);
+      } else {
+        ctx.moveTo(x + 2, y + 16);
+        ctx.lineTo(x - 6, y + 12);
+      }
+      ctx.stroke();
+    }
+
+    {
+      const h = state.hero;
+      const x = h.x;
+      const y = h.y;
+
+      ctx.fillStyle = 'rgba(0,0,0,0.25)';
+      ctx.beginPath();
+      ctx.ellipse(x + h.w/2, y + h.h + 2, 13, 6, 0, 0, Math.PI*2);
+      ctx.fill();
+
+      ctx.fillStyle = colors.hero;
+      ctx.beginPath();
+      ctx.roundRect(x, y, h.w, h.h, 8);
+      ctx.fill();
+
+      ctx.strokeStyle = colors.hero2;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(x + 2, y + 2, h.w - 4, h.h - 4, 7);
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(0,0,0,0.65)';
+      const eyeX = h.face > 0 ? x + 14 : x + 8;
+      ctx.fillRect(eyeX, y + 9, 2, 2);
+
+      ctx.fillStyle = 'rgba(255,77,141,0.85)';
+      ctx.fillRect(x + 8, y + 2, 6, 3);
+    }
+
+    const wx = state.camX + pointer.x;
+    const wy = state.camY + pointer.y;
+    const t = worldToTile(wx, wy);
+
+    if (inBounds(t.tx, t.ty)) {
+      const px = t.tx * TILE;
+      const py = t.ty * TILE;
+      let col = 'rgba(124,255,107,0.7)';
+      if (tool === Tool.CUT) col = 'rgba(255,204,102,0.8)';
+      if (tool === Tool.VALVE) col = 'rgba(134,199,255,0.85)';
+
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(px + 3, py + 3, TILE - 6, TILE - 6);
+    }
+
+    ctx.restore();
+
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.fillRect(16, 16, 280, 70);
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.strokeRect(16, 16, 280, 70);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.font = '700 14px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    ctx.fillText(levels[state.levelIndex].name, 26, 40);
+
+    ctx.font = '600 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    const ttext = tool === Tool.GROW ? 'Инструмент: Взрастить' : tool === Tool.CUT ? 'Инструмент: Подрезать' : 'Инструмент: Клапан';
+    ctx.fillStyle = 'rgba(159,178,217,0.95)';
+    ctx.fillText(ttext + (state.paused ? ' (Пауза)' : ''), 26, 62);
+
+    ctx.fillStyle = 'rgba(159,178,217,0.95)';
+    ctx.fillText('ЛКМ — применить, Space — пауза', 26, 80);
+  }
+
+  if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+      const rr = Math.min(r, w/2, h/2);
+      this.beginPath();
+      this.moveTo(x + rr, y);
+      this.arcTo(x + w, y, x + w, y + h, rr);
+      this.arcTo(x + w, y + h, x, y + h, rr);
+      this.arcTo(x, y + h, x, y, rr);
+      this.arcTo(x, y, x + w, y, rr);
+      this.closePath();
+      return this;
+    };
+  }
+
+  let last = performance.now();
+  function frame(now) {
+    const dt = clamp((now - last) / 1000, 0, 0.033);
+    last = now;
+
+    update(dt);
+    draw();
+
+    requestAnimationFrame(frame);
+  }
+
+  function resizeCanvas() {
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    const rect = canvas.getBoundingClientRect();
+    viewW = Math.max(1, Math.round(rect.width));
+    viewH = Math.max(1, Math.round(rect.height));
+    canvas.width = Math.round(viewW * dpr);
+    canvas.height = Math.round(viewH * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  window.addEventListener('resize', resizeCanvas);
+
+  canvas.addEventListener('mousemove', (e) => {
+    const r = canvas.getBoundingClientRect();
+    pointer.x = (e.clientX - r.left);
+    pointer.y = (e.clientY - r.top);
+  });
+
+  canvas.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    pointer.down = true;
+    pointer.justClicked = true;
+  });
+
+  window.addEventListener('mouseup', (e) => {
+    if (e.button !== 0) return;
+    pointer.down = false;
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === '1') setTool(Tool.GROW);
+    if (e.key === '2') setTool(Tool.CUT);
+    if (e.key === '3') setTool(Tool.VALVE);
+
+    if (e.key.toLowerCase() === 'r') {
+      resetLevel(state.levelIndex);
+    }
+
+    if (e.key.toLowerCase() === 'n') {
+      nextLevel();
+    }
+
+    if (e.code === 'Space') {
+      e.preventDefault();
+      state.paused = !state.paused;
+      ui.status.textContent = state.paused ? 'Пауза' : 'Идёт стройка';
+    }
+  });
+
+  ui.btnRestart.addEventListener('click', () => resetLevel(state.levelIndex));
+  ui.btnNext.addEventListener('click', () => nextLevel());
+
+  ui.ovPrimary.addEventListener('click', () => {
+    if (mode === GameMode.WON) {
+      if (state.levelIndex < levels.length - 1) {
+        resetLevel(state.levelIndex + 1);
+      } else {
+        resetLevel(0);
+      }
+    } else if (mode === GameMode.LOST) {
+      resetLevel(state.levelIndex);
+    } else {
+      hideOverlay();
+      mode = GameMode.RUNNING;
+    }
+  });
+
+  ui.ovSecondary.addEventListener('click', () => {
+    resetLevel(state.levelIndex);
+  });
+
+  function nextLevel() {
+    const ni = (state.levelIndex + 1) % levels.length;
+    resetLevel(ni);
+  }
+
+  function intro() {
+    mode = GameMode.INTRO;
+    showOverlay(
+      'Добро пожаловать в овощное королевство',
+      'Вы — Черричка, невидимый дух‑архитектор. Чиполлино идёт к цели сам. Ваше оружие — «Садовая магия»: вырастить платформу, срезать её, или переключить клапан и смыть Лимонишек водой. Но «Гнилой Устав» пытается вернуть порядок: ваши творения распадаются со временем.',
+      'Начать'
+    );
+  }
+
+  function start() {
+    resizeCanvas();
+    setTool(Tool.GROW);
+    resetLevel(0);
+    intro();
+    requestAnimationFrame(frame);
+  }
+
+  start();
+})();
+</script>
+</body>
+</html>
